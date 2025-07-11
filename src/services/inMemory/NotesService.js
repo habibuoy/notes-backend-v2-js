@@ -53,7 +53,7 @@ class NotesService {
       title,
       body,
       tags,
-      updatedAt
+      updatedAt,
     };
 
     return this._notes[noteIndex];
@@ -70,4 +70,4 @@ class NotesService {
   }
 }
 
-module.exports = { NotesService }
+module.exports = { NotesService };
