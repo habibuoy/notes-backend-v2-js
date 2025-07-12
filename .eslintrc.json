@@ -13,6 +13,7 @@
         "no-console": "off",
         "no-underscore-dangle":"warn",
         "no-unused-vars": "warn",
-        "no-unexpected-multiline": "error"
+        "no-unexpected-multiline": "error",
+        "no-undef": "off"
     }
 }
