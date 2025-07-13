@@ -3,6 +3,9 @@ const notes = require('./api/notes');
 const { NotesService } = require('./services/postgres/NotesService');
 const { NotesValidator } = require('./validator/notes');
 const ClientError = require('./exceptions/ClientError');
+const { UserService } = require('./services/postgres/UserService');
+const { UsersValidator } = require('./validator/users');
+const users = require('./api/users');
 require('dotenv').config();
 
 const init = async () => {
@@ -38,6 +41,16 @@ const init = async () => {
     options: {
       service: notesService,
       validator: NotesValidator,
+    },
+  });
+
+  const userService = new UserService();
+
+  await server.register({
+    plugin: users,
+    options: {
+      service: userService,
+      validator: UsersValidator,
     },
   });
 
