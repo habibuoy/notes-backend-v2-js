@@ -58,6 +58,10 @@ const init = async () => {
       return newResponse;
     }
 
+    if (response instanceof Error) {
+      console.error('Unexpected error has occurred', response);
+    }
+
     return h.continue;
   });
 
