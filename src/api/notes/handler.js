@@ -49,7 +49,7 @@ class NotesHandler {
     const { id } = request.params;
 
     const { id: userId } = request.auth.credentials;
-    await this._service.verifyNoteOwner(id, userId);
+    await this._service.verifyNoteAccess(id, userId);
 
     const note = await this._service.getNoteById(id);
 
@@ -65,7 +65,7 @@ class NotesHandler {
     const { id } = request.params;
 
     const { id: userId } = request.auth.credentials;
-    await this._service.verifyNoteOwner(id, userId);
+    await this._service.verifyNoteAccess(id, userId);
 
     this._validator.validateNotePayload(request.payload);
 

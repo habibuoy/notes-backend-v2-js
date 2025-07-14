@@ -4,10 +4,12 @@ const AuthorizationError = require('../../exceptions/AuthorizationError');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const { mapDBToModel } = require('../../utils');
+const ClientError = require('../../exceptions/ClientError');
 
 class NotesService {
-  constructor() {
+  constructor(collabService) {
     this._pool = new Pool();
+    this._collabService = collabService;
   }
 
   async addNote({
@@ -34,7 +36,12 @@ class NotesService {
 
   async getNotes(owner) {
     const query = {
-      text: 'SELECT * FROM notes WHERE owner = $1',
+      text: `
+        SELECT n.* FROM notes n
+        LEFT JOIN collaborations c ON c.note_id = n.id
+        WHERE n.owner = $1 OR c.user_id = $1
+        GROUP BY n.id
+      `,
       values: [owner],
     };
 
@@ -104,6 +111,27 @@ class NotesService {
 
     if (note.owner !== owner) {
       throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+    }
+  }
+
+  async verifyNoteAccess(noteId, userId) {
+    try {
+      await this.verifyNoteOwner(noteId, userId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      try {
+        await this._collabService.verifyCollaborator(noteId, userId);
+      } catch (collabError) {
+        if (collabError instanceof ClientError) {
+          throw error;
+        }
+
+        // rethrow the inner error if it is not ClientError (indicating system error)
+        throw collabError;
+      }
     }
   }
 }

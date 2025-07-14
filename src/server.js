@@ -11,6 +11,9 @@ const { AuthenticationsService } = require('./services/postgres/AuthenticationsS
 const { AuthenticationsValidator } = require('./validator/authentications');
 const authentications = require('./api/authentications');
 const TokenManager = require('./tokenize/TokenManager');
+const { CollaborationsService } = require('./services/postgres/CollaborationsService');
+const { CollaborationsValidator } = require('./validator/collaborations');
+const collaborations = require('./api/collaborations');
 require('dotenv').config();
 
 const init = async () => {
@@ -68,7 +71,8 @@ const init = async () => {
     return h.continue;
   });
 
-  const notesService = new NotesService();
+  const collabService = new CollaborationsService();
+  const notesService = new NotesService(collabService);
 
   await server.register({
     plugin: notes,
@@ -97,6 +101,15 @@ const init = async () => {
       userService,
       validator: AuthenticationsValidator,
       tokenManager: TokenManager,
+    },
+  });
+
+  await server.register({
+    plugin: collaborations,
+    options: {
+      collabService,
+      notesService,
+      validator: CollaborationsValidator,
     },
   });
 
