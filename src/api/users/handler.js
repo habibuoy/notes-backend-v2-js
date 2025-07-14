@@ -30,6 +30,20 @@ class UserHandler {
       },
     });
   }
+
+  async getUsersHandler(request, h) {
+    await this._validator.validateUserQuery(request.query);
+
+    const { username } = request.query;
+    const result = await this._service.getUsers({ username });
+
+    return h.response({
+      status: 'success',
+      data: {
+        users: result,
+      },
+    });
+  }
 }
 
 module.exports = { UserHandler };

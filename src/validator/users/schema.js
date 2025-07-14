@@ -6,4 +6,8 @@ const UserPayloadSchema = Joi.object({
   fullname: Joi.string().required(),
 });
 
-module.exports = { UserPayloadSchema };
+const UserQuerySchema = Joi.object({
+  username: Joi.string().empty(''),
+});
+
+module.exports = { UserPayloadSchema, UserQuerySchema };

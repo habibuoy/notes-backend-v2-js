@@ -59,6 +59,17 @@ class UserService {
     return rows[0];
   }
 
+  async getUsers({ username }) {
+    const query = {
+      text: 'SELECT * FROM users WHERE username LIKE $1',
+      values: [`%${username}%`],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    return rows.map((u) => ({ id: u.id, username: u.username, fullname: u.fullname }));
+  }
+
   async verifyUserCredential(username, password) {
     const query = {
       text: 'SELECT id, password FROM users WHERE username = $1',
