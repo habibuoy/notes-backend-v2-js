@@ -58,8 +58,11 @@ const init = async () => {
       return newResponse;
     }
 
-    if (response instanceof Error) {
-      console.error('Unexpected error has occurred', response);
+    if (response instanceof Error
+        && response.output.statusCode >= 500
+        && response.output.statusCode < 600
+    ) {
+      console.error('Unexpected error has occurred on request', request.info, response);
     }
 
     return h.continue;
