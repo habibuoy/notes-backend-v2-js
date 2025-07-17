@@ -5,11 +5,13 @@ const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const { mapDBToModel } = require('../../utils');
 const ClientError = require('../../exceptions/ClientError');
+const { NotesPrefix } = require('../redis/CacheConstants');
 
 class NotesService {
-  constructor(collabService) {
+  constructor(collabService, cacheService) {
     this._pool = new Pool();
     this._collabService = collabService;
+    this._cacheService = cacheService;
   }
 
   async addNote({
@@ -31,6 +33,8 @@ class NotesService {
       throw new InvariantError('Catatan gagal ditambahkan');
     }
 
+    await this._cacheService.delete(`${NotesPrefix}${owner}`);
+
     return resultId;
   }
 
@@ -46,8 +50,11 @@ class NotesService {
     };
 
     const result = await this._pool.query(query);
+    const mappedResult = result.rows.map(mapDBToModel);
 
-    return result.rows.map(mapDBToModel);
+    await this._cacheService.set(`${NotesPrefix}${owner}`, JSON.stringify(mappedResult));
+
+    return mappedResult;
   }
 
   async getNoteById(id) {
@@ -83,12 +90,15 @@ class NotesService {
       throw new NotFoundError('Gagal memperbarui catatan. Catatan tidak ditemukan');
     }
 
-    return result.rows.map(mapDBToModel)[0];
+    const note = mapDBToModel(result.rows[0]);
+    await this._cacheService.delete(`${NotesPrefix}${note.owner}`);
+
+    return note;
   }
 
   async deleteNoteById(id) {
     const query = {
-      text: 'DELETE FROM notes  WHERE id = $1 RETURNING id',
+      text: 'DELETE FROM notes WHERE id = $1 RETURNING id, owner',
       values: [id],
     };
 
@@ -97,6 +107,8 @@ class NotesService {
     if (!result.rows.length) {
       throw new NotFoundError('Gagal menghapus catatan. Catatan tidak ditemukan');
     }
+
+    await this._cacheService.delete(`${NotesPrefix}${result.owner}`);
   }
 
   async verifyNoteOwner(id, owner) {

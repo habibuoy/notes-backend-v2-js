@@ -22,6 +22,7 @@ const exportsPlugin = require('./api/exports');
 const { AwsStorageService } = require('./services/storage/AwsStorageService');
 const { UploadValidator } = require('./validator/uploads');
 const uploadPlugin = require('./api/uploads');
+const { CacheService } = require('./services/redis/CacheService');
 
 require('dotenv').config();
 
@@ -83,8 +84,9 @@ const init = async () => {
     return h.continue;
   });
 
-  const collabService = new CollaborationsService();
-  const notesService = new NotesService(collabService);
+  const cacheService = new CacheService();
+  const collabService = new CollaborationsService(cacheService);
+  const notesService = new NotesService(collabService, cacheService);
 
   await server.register({
     plugin: notes,
