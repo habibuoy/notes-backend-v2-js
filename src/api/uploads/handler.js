@@ -9,12 +9,17 @@ class UploadHandler {
 
     this._validator.validateImageHeaders(data.hapi.headers);
 
-    const filename = await this._service.writeFile(data, data.hapi);
+    const basePathLocation = `http://${process.env.HOST}:${process.env.PORT}/upload/images`;
+    const location = await this._service.writeFile({
+      file: data,
+      meta: data.hapi,
+      basePathLocation,
+    });
 
     return h.response({
       status: 'success',
       data: {
-        fileLocation: `http://${process.env.HOST}:${process.env.PORT}/upload/images/${filename}`,
+        fileLocation: location,
       },
     }).code(201);
   }

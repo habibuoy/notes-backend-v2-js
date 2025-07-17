@@ -9,7 +9,7 @@ class StorageService {
     }
   }
 
-  writeFile(file, meta) {
+  writeFile({ file, meta, basePathLocation }) {
     const filename = `${Date.now()}${meta.filename}`;
     const filePath = `${this._directory}/${filename}`;
 
@@ -25,7 +25,7 @@ class StorageService {
       });
 
       file.on('end', () => {
-        resolve(filename);
+        resolve(`${basePathLocation}/${filename}`);
       });
 
       file.pipe(fileStream);
