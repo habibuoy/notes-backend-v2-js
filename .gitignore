@@ -140,3 +140,6 @@ vite.config.ts.timestamp-*
 
 # Environtment files
 *.env
+
+# File Upload directory
+/src/api/uploads/file/
