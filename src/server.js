@@ -22,6 +22,7 @@ const exportsPlugin = require('./api/exports');
 const { StorageService } = require('./services/storage/StorageService');
 const { UploadValidator } = require('./validator/uploads');
 const uploadPlugin = require('./api/uploads');
+const { RelativeLocalUploadDirectory } = require('./services/storage/StorageConstants');
 
 require('dotenv').config();
 
@@ -133,7 +134,7 @@ const init = async () => {
     },
   });
 
-  const storageService = new StorageService(path.resolve(__dirname, 'api/uploads/file/images'));
+  const storageService = new StorageService(path.resolve(__dirname, RelativeLocalUploadDirectory));
   await server.register({
     plugin: uploadPlugin,
     options: {
