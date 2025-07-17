@@ -19,10 +19,9 @@ const collaborations = require('./api/collaborations');
 const ProducerService = require('./services/rabbitmq/ProducerService');
 const { ExportsValidator } = require('./validator/exports');
 const exportsPlugin = require('./api/exports');
-const { StorageService } = require('./services/storage/StorageService');
+const { AwsStorageService } = require('./services/storage/AwsStorageService');
 const { UploadValidator } = require('./validator/uploads');
 const uploadPlugin = require('./api/uploads');
-const { RelativeLocalUploadDirectory } = require('./services/storage/StorageConstants');
 
 require('dotenv').config();
 
@@ -134,7 +133,7 @@ const init = async () => {
     },
   });
 
-  const storageService = new StorageService(path.resolve(__dirname, RelativeLocalUploadDirectory));
+  const storageService = new AwsStorageService();
   await server.register({
     plugin: uploadPlugin,
     options: {
