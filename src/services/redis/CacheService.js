@@ -24,14 +24,31 @@ class CacheService {
     });
   }
 
-  async get(key, value) {
-    const result = await this._cache.set(key, value);
+  async get(key) {
+    const result = await this._cache.get(key);
 
     if (result === null) {
       throw new Error('Cache not found');
     }
 
     return result;
+  }
+
+  async getOrCreate(key, factory, options = {
+    expirationInSeconds: 3600,
+  }) {
+    let result;
+    let fromCache = false;
+
+    try {
+      result = await this.get(key);
+      fromCache = true;
+    } catch (error) {
+      result = await factory();
+      await this.set(key, result, options);
+    }
+
+    return { result, fromCache };
   }
 
   async delete(key) {

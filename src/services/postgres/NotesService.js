@@ -49,12 +49,16 @@ class NotesService {
       values: [owner],
     };
 
-    const result = await this._pool.query(query);
-    const mappedResult = result.rows.map(mapDBToModel);
+    const { result: parsedResult, fromCache } = await this._cacheService.getOrCreate(
+      `${NotesPrefix}${owner}`,
+      async () => {
+        const queryResult = await this._pool.query(query);
+        const mappedResult = queryResult.rows.map(mapDBToModel);
+        return JSON.stringify(mappedResult);
+      },
+    );
 
-    await this._cacheService.set(`${NotesPrefix}${owner}`, JSON.stringify(mappedResult));
-
-    return mappedResult;
+    return { result: JSON.parse(parsedResult), fromCache };
   }
 
   async getNoteById(id) {

@@ -13,7 +13,7 @@ class NotesHandler {
   async postNoteHandler(request, h) {
     this._validator.validateNotePayload(request.payload);
 
-    const { title = 'untitle', body, tags } = request.payload;
+    const { title = 'untitled', body, tags } = request.payload;
 
     const { id: userId } = request.auth.credentials;
 
@@ -33,16 +33,24 @@ class NotesHandler {
     return response;
   }
 
-  async getNotesHandler(request) {
+  async getNotesHandler(request, h) {
     const { id: userId } = request.auth.credentials;
 
-    const notes = await this._service.getNotes(userId);
-    return {
+    const { result: notes, fromCache } = await this._service.getNotes(userId);
+
+    const response = h.response({
       status: 'success',
       data: {
         notes,
       },
-    };
+    });
+
+    if (fromCache) {
+      response
+        .header('X-DATA-SOURCE', 'cache');
+    }
+
+    return response;
   }
 
   async getNoteByIdHandler(request, h) {
