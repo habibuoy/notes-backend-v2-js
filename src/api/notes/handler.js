@@ -59,14 +59,21 @@ class NotesHandler {
     const { id: userId } = request.auth.credentials;
     await this._service.verifyNoteAccess(id, userId);
 
-    const note = await this._service.getNoteById(id);
+    const { result: note, fromCache } = await this._service.getNoteById(id);
 
-    return h.response({
+    const response = h.response({
       status: 'success',
       data: {
         note,
       },
     });
+
+    if (fromCache) {
+      response
+        .header('X-DATA-SOURCE', 'cache');
+    }
+
+    return response;
   }
 
   async putNoteByIdHandler(request, h) {

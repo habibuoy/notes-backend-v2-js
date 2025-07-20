@@ -49,7 +49,7 @@ class NotesService {
       values: [owner],
     };
 
-    const { result: parsedResult, fromCache } = await this._cacheService.getOrCreate(
+    const { result, fromCache } = await this._cacheService.getOrCreate(
       `${NotesPrefix}${owner}`,
       async () => {
         const queryResult = await this._pool.query(query);
@@ -58,7 +58,7 @@ class NotesService {
       },
     );
 
-    return { result: JSON.parse(parsedResult), fromCache };
+    return { result: JSON.parse(result), fromCache };
   }
 
   async getNoteById(id) {
@@ -71,13 +71,20 @@ class NotesService {
       values: [id],
     };
 
-    const result = await this._pool.query(query);
+    const { result, fromCache } = await this._cacheService.getOrCreate(
+      `${NotesPrefix}${id}`,
+      async () => {
+        const { rows } = await this._pool.query(query);
 
-    if (!result.rows.length) {
-      throw new NotFoundError('Catatan tidak ditemukan');
-    }
+        if (!rows.length) {
+          throw new NotFoundError('Catatan tidak ditemukan');
+        }
 
-    return result.rows.map(mapDBToModel)[0];
+        return JSON.stringify(mapDBToModel(rows[0]));
+      },
+    );
+
+    return { result: JSON.parse(result), fromCache };
   }
 
   async updateNoteById(id, { title, body, tags }) {
@@ -95,6 +102,7 @@ class NotesService {
     }
 
     const note = mapDBToModel(result.rows[0]);
+    await this._deleteNoteCache(note.id);
     await this._cacheService.delete(`${NotesPrefix}${note.owner}`);
 
     return note;
@@ -112,6 +120,7 @@ class NotesService {
       throw new NotFoundError('Gagal menghapus catatan. Catatan tidak ditemukan');
     }
 
+    await this._deleteNoteCache(id);
     await this._cacheService.delete(`${NotesPrefix}${result.owner}`);
   }
 
@@ -153,6 +162,10 @@ class NotesService {
         throw collabError;
       }
     }
+  }
+
+  async _deleteNoteCache(id) {
+    await this._cacheService.delete(`${NotesPrefix}${id}`);
   }
 }
 
